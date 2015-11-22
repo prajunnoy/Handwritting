@@ -5,14 +5,17 @@ from matplotlib import pyplot as plt
 
 img = cv2.imread('new.jpg')
 imgray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-imgray = cv2.GaussianBlur(imgray,(5,5),0)
+# imgray = cv2.GaussianBlur(imgray,(5,5),0)
 # edges = cv2.Canny(img, 50, 100)
 # contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 # cv2.drawContours(img,contours,-1,(255,255,255),-1)
 
+# the best result out of all
+ret,thresh = cv2.threshold(imgray,5,255,cv2.THRESH_BINARY_INV)
+# not work (result only edges of characters)
 # thresh = cv2.adaptiveThreshold(imgray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
-ret3,thresh = cv2.threshold(imgray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-# ret,thresh = cv2.threshold(imgray,127,255,cv2.THRESH_BINARY_INV)
+# not work some characters lost (ตัวอักษรขาดๆๆ บางส่วนlighter than the others)
+# ret3,thresh = cv2.threshold(imgray,0,200,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
 cv2.imwrite('final.jpg', thresh)
 

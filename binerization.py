@@ -36,13 +36,17 @@ def clear_border(gray):
     gray = cv2.GaussianBlur(gray,(5,5),0)
     gray = cv2.bilateralFilter(gray,9, 50, 50)
 
+
     # thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
     ret3,thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # plt.subplot(223),plt.imshow(thresh)
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     # biggest = None
-    # max_area = 0
+    max_area = 0
+    best_cnt = None
     # find image area
     image_area = gray.size
     approx = 0
@@ -55,8 +59,10 @@ def clear_border(gray):
             #         biggest = approx
             #         max_area = area
 
+
     # cv2.drawContours(img,approx,-1,(0,255,0),10)
-    # cv2.drawContours(img,[approx],0,(0,255,0),2,cv2.CV_AA)
+    # cv2.drawContours(img,[approx],0,(0,255,0),5,cv2.CV_AA)
+    # plt.subplot(224),plt.imshow(img)
 
     # this is corners of new square image taken in CW order from top-left corner
     h = np.array([ [0,0],[height-1,0],[height-1,width-1],[0,width-1] ],np.float32)
@@ -204,19 +210,39 @@ def find_optimal_components_subset(contours, edges):
             break
 
     return crop
+######################################################################
+def auto_canny(image, sigma=0.33):
+	# compute the median of the single channel pixel intensities
+	v = np.median(image)
 
+	# apply automatic Canny edge detection using the computed median
+	lower = int(max(0, (1.0 - sigma) * v))
+	upper = int(min(255, (1.0 + sigma) * v))
+	edged = cv2.Canny(image, lower, upper)
+
+	# return the edged image
+	return edged
+
+####################################################################
 ##################### Main command in CROP Function #############################
 def crop(pil_im, N):
     # downscale the original image
     scale, im = downscale_image(pil_im)
+    # just add this two lines24/11/2015
+    gray = cv2.cvtColor(np.asarray(im), cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
     if N == 1:
         #  for Clear_border image
-        edges = cv2.Canny(np.asarray(im), 50, 100)
+        # edges = auto_canny(blurred)
+        edges = cv2.Canny(np.asarray(im), 80, 150)
     else:
     # for not Clear_border image
-        edges = cv2.Canny(np.asarray(im), 100, 200)
+        edges = auto_canny(blurred)
+        # edges = cv2.Canny(blurred, 100, 200)
+        # edges = cv2.Canny(np.asarray(im), 100, 200)
 
+    # plt.subplot(222),plt.imshow(edges, 'gray')
     contours = find_components(edges)
 
     crop = find_optimal_components_subset(contours, edges)
@@ -232,25 +258,30 @@ def crop(pil_im, N):
 
 #################################################################################
 ######################### Start main function ###################################
-orig_img = Image.open('b2.jpg')
+orig_img = Image.open('h.jpg')
 r,g,b = orig_img.getpixel((0,0))
 # convert PIL image to opencv image
 img = cv2.cvtColor(np.array(orig_img), cv2.COLOR_RGB2BGR)
 width, height, ch = img.shape
+print width, height
 # convert image to grayscale
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # covert opencv to pil image
 gray_im = Image.fromarray(gray)
 
-color =gray_im.getpixel((0,0))
+color1 =gray_im.getpixel((0,0))
+color2 =gray_im.getpixel((0,width-1))
+# color3 =gray_im.getpixel((0,height))
 n = 0
 
 print r,g,b
-print color
+print color1
+print color2
+# print color3
 # if pixel(0,0) is not dark color, then dont go to clear function
-if color < 76:
+if color1 < 76 or color2 < 76  :
     # Call Clear_border function
-    orig_img = clear_border(gray)
+    # orig_img = clear_border(gray)
     n = 1
     print n
 

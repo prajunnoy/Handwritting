@@ -6,29 +6,32 @@ from matplotlib import pyplot as plt
 from scipy import ndimage
 from PIL import Image
 
+
 def auto_canny(image, sigma=0.33):
-	# compute the median of the single channel pixel intensities
-	v = np.median(image)
+    # compute the median of the single channel pixel intensities
+    v = np.median(image)
 
-	# apply automatic Canny edge detection using the computed median
-	lower = int(max(0, (1.0 - sigma) * v))
-	upper = int(min(255, (1.0 + sigma) * v))
-	edged = cv2.Canny(image, lower, upper)
+    # apply automatic Canny edge detection using the computed median
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    edged = cv2.Canny(image, lower, upper)
 
-	# return the edged image
-	return edged
+    # return the edged image
+    return edged
+
 
 ####################################################################
 # read image (as opencv image)
-img = cv2.imread('final.jpg',0)
+img = cv2.imread('final_tang_half2.jpg', 0)
 
-kernel = np.ones((5,5),np.uint8)
+kernel = np.ones((5, 5), np.uint8)
+# kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
 # closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
-opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+opening_im = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
 # dilation = cv2.dilate(img,kernel,iterations = 1)
 
 # Canny edges detection
-edges = cv2.Canny(opening,50,100)
+edges = cv2.Canny(opening_im, 50, 100)
 # edges = cv2.Canny(img,100,200)
 # edges = auto_canny(img)
 
@@ -37,8 +40,8 @@ edges = cv2.Canny(opening,50,100)
 # plt.title('Canny Edge detection'), plt.xticks([]), plt.yticks([])
 # plt.subplot(111),plt.imshow(img)
 
-ret,thresh = cv2.threshold(img,127,255,0)
-contours,hierarchy = cv2.findContours(thresh, 1, 2)
+ret, thresh = cv2.threshold(img, 127, 255, 0)
+_, contours, hierarchy = cv2.findContours(thresh, 1, 2)
 
 cnt = contours[0]
 count = 0
@@ -61,8 +64,8 @@ for cnt in contours:
 
         # cv2.drawContours(img,[box],0,(0,255,0),2)
 
-        x,y,w,h = cv2.boundingRect(cnt)
-        reg = (x,y,x+w,y+h)
+        x, y, w, h = cv2.boundingRect(cnt)
+        reg = (x, y, x + w, y + h)
         coor.append(reg)
         # cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # print x, y, w, h
@@ -86,7 +89,7 @@ for cnt in contours:
         # cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # cv2.putText(img,'Moth Detected',(x+w+10,y+h),0,0.3,(0,255,0))
 
-        print('done ///////////////////////////////////////////////////////////////////////// %d') %count
+        print('done ///////////////////////////////////////////////////////////////////////// %d') % count
 
 height, width = img.shape
 print img.shape
@@ -103,37 +106,37 @@ print coor
 idx = 0
 idx_arr = []
 # idx_b = 0
-y11 = height/2
+y11 = height / 2
 y21 = height
 # checking condition for bottom line
 for x1, y1, x2, y2 in coor:
 
-	print idx, coor[idx], y11, y21
-	print x1, y1, x2, y2
+    print idx, coor[idx], y11, y21
+    print x1, y1, x2, y2
 
-	if x1==1 or x2==1:
-		# coor.pop(idx)
-		idx_arr.append(idx)
+    if x1 == 1 or x2 == 1:
+        # coor.pop(idx)
+        idx_arr.append(idx)
 
-		# if y1 not btw y11andy22 or y2 not btw y11and y22
-	elif y11 <= y1 <= y21 or y11 <= y2 <= y21:
-		y11 =  y1
-		y21 =  y2
+    # if y1 not btw y11andy22 or y2 not btw y11and y22
+    elif y11 <= y1 <= y21 or y11 <= y2 <= y21:
+        y11 = y1
+        y21 = y2
 
-	else:
-		# coor.pop(idx)
-		idx_arr.append(idx)
+    else:
+        # coor.pop(idx)
+        idx_arr.append(idx)
 
-	idx+=1
+    idx += 1
 
 print idx_arr
 
 # pop unwanted coordinate
-a =0
+a = 0
 for i in idx_arr:
-	i-=a
-	coor.pop(i)
-	a+=1
+    i -= a
+    coor.pop(i)
+    a += 1
 
 print coor
 
@@ -156,28 +159,29 @@ print coor[0]
 # find angle from H and P
 H = XX2 - X1
 if YY2 > Y2:
-	P = YY2 - Y2
+    P = YY2 - Y2
 elif Y2 > YY2:
-	P = Y2 - YY2
+    P = Y2 - YY2
 print XX2, X1
 print YY2, Y2
 print H, P
-print P/float(H)
-angle = math.asin(P/float(H))
+print P / float(H)
+angle = math.asin(P / float(H))
 # convert angle from radians to degrees
 angle = math.degrees(angle)
 print angle
 
 # rotate the pages by angle(in degree) of bottom line
-rotated = ndimage.rotate(img, 360-angle, mode='nearest')
+rotated = ndimage.rotate(img, 360 - angle, mode='nearest')
 
 # Crop the bottom line image
 # cut = img[289:474, 38:2832]
 # cv2.imwrite('cut.jpg', cut)
 # cv2.imwrite(str(count) + '.jpg', roi)
-cv2.imwrite('rotate.jpg', rotated)
-plt.subplot(211),plt.imshow(img)
-plt.subplot(212),plt.imshow(rotated)
+final = cv2.cvtColor(rotated, cv2.COLOR_GRAY2RGB)
+cv2.imwrite('rotate.jpg', final)
+plt.subplot(211), plt.imshow(img)
+plt.subplot(212), plt.imshow(final)
 
 # cv2.imshow('img',img)
 # cv2.waitKey(0)

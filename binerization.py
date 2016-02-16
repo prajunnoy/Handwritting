@@ -54,8 +54,8 @@ def clear_border(grayim):
 
     # cv2.imwrite('thresh.jpg', thresh_clr)
 
-    # _, contours_clr, hierarchy = cv2.findContours(thresh_clr, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    _, contours_clr, _ = cv2.findContours(thresh_clr, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    # contours_clr, hierarchy = cv2.findContours(thresh_clr, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours_clr, _ = cv2.findContours(thresh_clr, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     # biggest = None
     max_area = 0
@@ -165,7 +165,7 @@ def find_components(edges, max_components=16):
     while count > 16:
         n += 1
         dilated_image = dilate(edges, N=3, iterations=n)
-        _, contours, _ = cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         count = len(contours)
     # print dilation
     # Image.fromarray(edges).show()
@@ -313,7 +313,7 @@ def crop(pil_im, N):
 
 #################################################################################
 ######################### Start main function ###################################
-orig_img = Image.open('ong22.jpg')
+orig_img = Image.open('fern12.jpg')
 r, g, b = orig_img.getpixel((0, 0))
 # convert PIL image to opencv image
 img = cv2.cvtColor(np.array(orig_img), cv2.COLOR_RGB2BGR)
